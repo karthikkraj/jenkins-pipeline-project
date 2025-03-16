@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
         BRANCH_NAME = 'main'
-        IMAGE_NAME = 'karthikkraj/BCD41-Karthik-jenkins:latest'
+        IMAGE_NAME = 'karthikkraj/bcd41-Karthik-jenkins:latest'
         CONTAINER_NAME = 'nodejs-app'
     }
 
