@@ -4,6 +4,8 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
         BRANCH_NAME = 'main'
+        IMAGE_NAME = 'karthikkraj/BCD41-Karthik-jenkins:latest'
+        CONTAINER_NAME = 'DevOps-Ass2'
     }
 
     tools {
@@ -37,15 +39,28 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t karthikkraj/BCD41-Karthik-jenkins:latest .'
+                sh "docker build -t ${IMAGE_NAME} ."
             }
         }
 
-        stage('Docker Push & Deploy') {
+        stage('Docker Push') {
             steps {
                 withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '') {
-                    sh 'docker push karthikkraj/BCD41-Karthik-jenkins:latest'
-                    sh 'docker run -d -p 3000:3000 karthikkraj/BCD41-Karthik-jenkins:latest'
+                    sh "docker push ${IMAGE_NAME}"
+                }
+            }
+        }
+
+        stage('Deploy Docker Container') {
+            steps {
+                script {
+                    // Stop & remove existing container (if any)
+                    sh "docker rm -f ${CONTAINER_NAME} || true"
+                    
+                    // Run new container
+                    sh "docker run -d --name ${CONTAINER_NAME} -p 3000:3000 ${IMAGE_NAME}"
+                    
+                    echo "Container '${CONTAINER_NAME}' deployed successfully!"
                 }
             }
         }
