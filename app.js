@@ -1,18 +1,15 @@
-const express = require('express');
-const app = express();
+// app.js
+const http = require('http');
+
+const hostname = 'localhost';
 const port = 3000;
 
-// Example route handler
-app.get('/', (req, res) => {
-  res.send('Hello, World!');
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello, I am Karthik Raj, and my roll number is 2022BCD0041');
 });
 
-// Another example route handler
-app.get('/about', (req, res) => {
-  res.send('This is the about page');
-});
-
-// Listen for incoming requests
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+server.listen(port, hostname, () => {
+  console.log(`Server is running at http://${hostname}:${port}/`);
 });
