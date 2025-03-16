@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
         BRANCH_NAME = 'main'
-        IMAGE_NAME = 'karthikkraj/BCD41-Karthik-jenkins:latest'
     }
 
     tools {
@@ -38,15 +37,15 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${IMAGE_NAME} ."
+                sh 'docker build -t BCD41-Karthik-jenkins:latest .'
             }
         }
 
         stage('Docker Push & Deploy') {
             steps {
                 withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '') {
-                    sh "docker push ${IMAGE_NAME}"
-                    sh "docker run -d -p 3000:3000 ${IMAGE_NAME}"
+                    sh 'docker push BCD41-Karthik-jenkins:latest'
+                    sh 'docker run -d -p 3000:3000 BCD41-Karthik-jenkins:latest'
                 }
             }
         }
