@@ -3,12 +3,17 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
     }
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git 'https://github.com/karthikkraj/jenkins-pipeline-project.git'
+    
+    environment {
+    BRANCH_NAME = 'main'
+    }
+    
+   stage('Checkout Code') {
+    steps {
+        git branch: 'main', url: 'https://github.com/karthikkraj/jenkins-pipeline-project.git'
             }
         }
+
         stage('Install Dependencies & Build') {
             steps {
                 sh 'npm install'
