@@ -37,15 +37,15 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t BCD41-Karthik-jenkins:latest .'
+                sh 'docker build -t karthikkraj/BCD41-Karthik-jenkins:latest .'
             }
         }
 
         stage('Docker Push & Deploy') {
             steps {
                 withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '') {
-                    sh 'docker push BCD41-Karthik-jenkins:latest'
-                    sh 'docker run -d -p 3000:3000 BCD41-Karthik-jenkins:latest'
+                    sh 'docker push karthikkraj/BCD41-Karthik-jenkins:latest'
+                    sh 'docker run -d -p 3000:3000 karthikkraj/BCD41-Karthik-jenkins:latest'
                 }
             }
         }
