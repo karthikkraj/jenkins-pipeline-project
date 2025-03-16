@@ -1,16 +1,15 @@
 pipeline {
     agent any
+    
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+        BRANCH_NAME = 'main'
     }
-    
-    environment {
-    BRANCH_NAME = 'main'
-    }
-    
-   stage('Checkout Code') {
-    steps {
-        git branch: 'main', url: 'https://github.com/karthikkraj/jenkins-pipeline-project.git'
+
+    stages {    // 👈 Add stages block
+        stage('Checkout Code') {
+            steps {
+                git branch: "${BRANCH_NAME}", url: 'https://github.com/karthikkraj/jenkins-pipeline-project.git'
             }
         }
 
@@ -20,6 +19,7 @@ pipeline {
                 sh 'npm test'
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('MySonarQube') {
@@ -27,11 +27,13 @@ pipeline {
                 }
             }
         }
+
         stage('Docker Build') {
             steps {
                 sh 'docker build -t karthikkraj/jenkins-pipeline-node-app:latest .'
             }
         }
+
         stage('Docker Push & Deploy') {
             steps {
                 withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '') {
@@ -42,4 +44,3 @@ pipeline {
         }
     }
 }
-
