@@ -6,7 +6,11 @@ pipeline {
         BRANCH_NAME = 'main'
     }
 
-    stages {    // 👈 Add stages block
+    tools {
+        nodejs "NodeJS"
+    }
+
+    stages {
         stage('Checkout Code') {
             steps {
                 git branch: "${BRANCH_NAME}", url: 'https://github.com/karthikkraj/jenkins-pipeline-project.git'
