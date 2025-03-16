@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/karthikkraj03/BCD41-Karthik-jenkins.git', branch: 'main'
+                git url: 'https://github.com/karthikkraj/jenkins-pipeline-project', branch: 'main'
             }
         }
 
