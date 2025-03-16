@@ -15,12 +15,14 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
+                echo "Checking out code from branch: ${BRANCH_NAME}"
                 git branch: "${BRANCH_NAME}", url: 'https://github.com/karthikkraj/jenkins-pipeline-project'
             }
         }
 
         stage('Install Dependencies & Build') {
             steps {
+                echo "Installing Node.js dependencies and running tests..."
                 sh 'npm install'
                 sh 'npm test'
             }
@@ -28,10 +30,11 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
+                echo "Starting SonarQube analysis..."
                 script {
                     def scannerHome = tool 'SonarScanner'
                     withSonarQubeEnv('MySonarQube') {
-                        sh "${scannerHome}/bin/sonar-scanner"
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=jenkins-pipeline-project"
                     }
                 }
             }
@@ -39,12 +42,14 @@ pipeline {
 
         stage('Docker Build') {
             steps {
+                echo "Building Docker image: ${IMAGE_NAME}"
                 sh "docker build -t ${IMAGE_NAME} ."
             }
         }
 
         stage('Docker Push') {
             steps {
+                echo "Pushing Docker image to DockerHub..."
                 withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '') {
                     sh "docker push ${IMAGE_NAME}"
                 }
@@ -53,6 +58,7 @@ pipeline {
 
         stage('Deploy Docker Container') {
             steps {
+                echo "Deploying Docker container: ${CONTAINER_NAME}"
                 script {
                     // Stop & remove existing container (if any)
                     sh "docker rm -f ${CONTAINER_NAME} || true"
@@ -63,6 +69,19 @@ pipeline {
                     echo "Container '${CONTAINER_NAME}' deployed successfully!"
                 }
             }
+        }
+    }
+    
+    post {
+        always {
+            echo "Pipeline completed. Cleaning up dangling images..."
+            sh 'docker image prune -f || true'
+        }
+        success {
+            echo "Pipeline executed successfully!"
+        }
+        failure {
+            echo "Pipeline failed. Please check logs."
         }
     }
 }
