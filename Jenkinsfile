@@ -43,15 +43,26 @@ pipeline {
         stage('Docker Build') {
             steps {
                 echo "Building Docker image: ${IMAGE_NAME}"
-                sh "docker build -t ${IMAGE_NAME} ."
+                script {
+                    // Ensure Docker is available
+                    sh 'docker --version'
+                    sh "docker build -t ${IMAGE_NAME} ."
+                }
             }
         }
 
         stage('Docker Push') {
             steps {
                 echo "Pushing Docker image to DockerHub..."
-                withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '') {
-                    sh "docker push ${IMAGE_NAME}"
+                script {
+                    // Check if Docker credentials are available before pushing
+                    if (fileExists("${DOCKERHUB_CREDENTIALS}")) {
+                        withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '') {
+                            sh "docker push ${IMAGE_NAME}"
+                        }
+                    } else {
+                        error "Docker credentials not found!"
+                    }
                 }
             }
         }
