@@ -55,13 +55,9 @@ pipeline {
             steps {
                 echo "Pushing Docker image to DockerHub..."
                 script {
-                    // Check if Docker credentials are available before pushing
-                    if (fileExists("${DOCKERHUB_CREDENTIALS}")) {
-                        withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '') {
-                            sh "docker push ${IMAGE_NAME}"
-                        }
-                    } else {
-                        error "Docker credentials not found!"
+                    // Ensure Docker is available and credentials are correct
+                    withDockerRegistry(credentialsId: 'dockerhub-credentials', url: '') {
+                        sh "docker push ${IMAGE_NAME}"
                     }
                 }
             }
