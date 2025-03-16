@@ -66,3 +66,14 @@ pipeline {
         }
     }
 }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                        def app = docker.build("karthikkraj/BCD41-Karthik-jenkins:${env.BUILD_NUMBER}")
+                        app.push()
+                    }
+                }
+            }
+        }
