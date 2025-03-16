@@ -1,25 +1,22 @@
 pipeline {
     agent any
-    
-    environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
-        BRANCH_NAME = 'main'
-        IMAGE_NAME = 'karthikkraj/BCD41-Karthik-jenkins:latest'
-        CONTAINER_NAME = 'DevOps-Ass2'
-    }
 
     tools {
-        nodejs "NodeJS"
+        nodejs 'NodeJS' // Name you configured in Jenkins
+    }
+
+    environment {
+        SONARQUBE = 'My SonarQube' // Name you configured for SonarQube
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: "${BRANCH_NAME}", url: 'https://github.com/karthikkraj/jenkins-pipeline-project.git'
+                git url: 'https://github.com/karthikkraj03/BCD41-Karthik-jenkins.git', branch: 'main'
             }
         }
 
-        stage('Install Dependencies & Build') {
+        stage('Build') {
             steps {
                 sh 'npm install'
                 sh 'npm test'
@@ -28,44 +25,11 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    def scannerHome = tool 'SonarScanner'
-                    withSonarQubeEnv('MySonarQube') {
-                        sh "${scannerHome}/bin/sonar-scanner"
-                    }
+                withSonarQubeEnv('My SonarQube') {
+                    sh 'sonar-scanner -Dsonar.projectKey=BCD41-Karthik-jenkins -Dsonar.sources=. -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info'
                 }
             }
         }
-
-        stage('Docker Build') {
-            steps {
-                sh "docker build -t ${IMAGE_NAME} ."
-            }
-        }
-
-        stage('Docker Push') {
-            steps {
-                withDockerRegistry(credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '') {
-                    sh "docker push ${IMAGE_NAME}"
-                }
-            }
-        }
-
-        stage('Deploy Docker Container') {
-            steps {
-                script {
-                    // Stop & remove existing container (if any)
-                    sh "docker rm -f ${CONTAINER_NAME} || true"
-                    
-                    // Run new container
-                    sh "docker run -d --name ${CONTAINER_NAME} -p 3000:3000 ${IMAGE_NAME}"
-                    
-                    echo "Container '${CONTAINER_NAME}' deployed successfully!"
-                }
-            }
-        }
-    }
-}
 
         stage('Docker Build & Push') {
             steps {
@@ -77,3 +41,17 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy Container') {
+            steps {
+                script {
+                    sh '''
+                    docker rm -f bcd41-container || true
+                    docker pull karthikkraj/BCD41-Karthik-jenkins:${BUILD_NUMBER}
+                    docker run -d --name bcd41-container -p 3000:3000 karthikkraj/BCD41-Karthik-jenkins:${BUILD_NUMBER}
+                    '''
+                }
+            }
+        }
+    }
+}
