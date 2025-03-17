@@ -82,7 +82,7 @@ pipeline {
     post {
         always {
             echo "Pipeline completed. Cleaning up dangling images..."
-            sh 'docker image prune -f || true'
+          //  sh 'docker image prune -f || true'
         }
         success {
             echo "Pipeline executed successfully!"
