@@ -87,7 +87,7 @@ pipeline {
                             docker ps -a | grep -q ${CONTAINER_NAME} && docker rm -f ${CONTAINER_NAME} || echo "No existing container to remove"
                             
                             # Run new container with health check
-                            docker run -d --name ${CONTAINER_NAME} -p 3000:3000 ${IMAGE_NAME}
+                            docker run -d --name ${CONTAINER_NAME} -p 9090:9090 ${IMAGE_NAME}
                             
                             # Verify container is running
                             CONTAINER_RUNNING=$(docker ps -q -f name=${CONTAINER_NAME})
