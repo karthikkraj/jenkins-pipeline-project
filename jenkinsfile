@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/karthikkraj/ECommerce.git'
+                git url: 'https://github.com/karthikkraj/jenkins-pipeline-project.git'
             }
         }
         stage('Install Dependencies') {
