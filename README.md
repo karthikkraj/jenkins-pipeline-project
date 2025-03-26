@@ -1,4 +1,4 @@
-# Jenkins Pipeline Project – Automated CI/CD for Scalable E-Commerce
+# Automated CI/CD Pipeline for E-Commerce Website using Jenkins, SonarQube, Git and Docker
 
 ## 🌟 Overview
 This project showcases a high-performance, full-stack E-commerce application powered by a cutting-edge CI/CD pipeline. Designed for scalability, efficiency, and security, this application leverages modern web technologies and automation to streamline the development and deployment process.
