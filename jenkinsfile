@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+    environment {
+        DOCKERHUB_CRED = 'dockerhub-cred'
+        SONARQUBE_SERVER = 'SonarQube'
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/karthikkraj/ECommerce.git'
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                    sh 'npx sonar-scanner -Dsonar.projectKey=ECommerce -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=<SONAR_TOKEN>'
+                }
+            }
+        }
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    docker.build("karthikkraj/ecommerce:latest")
+                    docker.withRegistry('', "${DOCKERHUB_CRED}") {
+                        docker.image("karthikkraj/ecommerce:latest").push()
+                    }
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'docker run -d -p 3000:3000 karthikkraj/ecommerce:latest'
+            }
+        }
+    }
+}
