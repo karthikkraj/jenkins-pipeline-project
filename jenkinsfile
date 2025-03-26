@@ -1,13 +1,15 @@
 pipeline {
     agent any
     environment {
-        DOCKERHUB_CRED = 'dockerhub-cred'
-        SONARQUBE_SERVER = 'SonarQube'
+        DOCKERHUB_CRED = 'dockerhub-credentials'
+        SONARQUBE_SERVER = 'MySonarQube'
+        IMAGE_NAME = 'karthikkraj/ecommerce'
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/karthikkraj/jenkins-pipeline-project.git'
+                git url: 'https://github.com/karthikkraj/jenkins-pipeline-project.git', branch: 'main'
             }
         }
         stage('Install Dependencies') {
@@ -18,24 +20,77 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                    sh 'npx sonar-scanner -Dsonar.projectKey=ECommerce -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=<SONAR_TOKEN>'
+                    sh '''
+                    npx sonar-scanner \
+                      -Dsonar.projectKey=jenkins-pipeline-Ecommerce \
+                      -Dsonar.projectName="Jenkins Pipeline Ecommerce App" \
+                      -Dsonar.projectVersion=1.0 \
+                      -Dsonar.sources=. \
+                      -Dsonar.sourceEncoding=UTF-8 \
+                      -Dsonar.exclusions=**/node_modules/** \
+                      -Dsonar.login=sqa_8b2496bbc36e1a5b00f0192b9fce87c323ae94eb
+                    '''
                 }
             }
         }
         stage('Docker Build & Push') {
             steps {
-                script {
-                    docker.build("karthikkraj/ecommerce:latest")
-                    docker.withRegistry('', "${DOCKERHUB_CRED}") {
-                        docker.image("karthikkraj/ecommerce:latest").push()
+                sh 'which docker || echo "Docker not found"'
+                withEnv(['PATH+DOCKER=/usr/local/bin:/opt/homebrew/bin']) {
+                    script {
+                        // Force a clean build by removing any old images
+                        sh "docker rmi ${IMAGE_NAME}:latest ${IMAGE_NAME}:${IMAGE_TAG} || true"
+                        
+                        // Build with both a versioned tag and latest tag
+                        sh "docker build --no-cache -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+                        
+                        // Clear any existing Docker config and disable proxy
+                        sh '''
+                        mkdir -p ~/.docker
+                        echo '{"proxies": {}}' > ~/.docker/config.json
+                        '''
+                        
+                        withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CRED}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                            sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                            
+                            // Push both the versioned and latest tags
+                            retry(3) {
+                                timeout(time: 5, unit: 'MINUTES') {
+                                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                                    sh "docker push ${IMAGE_NAME}:latest"
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
         stage('Deploy') {
             steps {
-                sh 'docker run -d -p 3000:3000 karthikkraj/ecommerce:latest'
+                withEnv(['PATH+DOCKER=/usr/local/bin:/opt/homebrew/bin']) {
+                    // Stop any existing container with the same name
+                    sh 'docker ps -q --filter "name=ecommerce-app" | xargs -r docker stop || true'
+                    sh 'docker ps -a -q --filter "name=ecommerce-app" | xargs -r docker rm || true'
+                    
+                    // Run new container with the versioned image
+                    sh "docker run -d -p 3000:3000 --name ecommerce-app ${IMAGE_NAME}:${IMAGE_TAG}"
+                    
+                    echo "Successfully deployed version ${IMAGE_TAG}"
+                }
             }
+        }
+    }
+    post {
+        always {
+            withEnv(['PATH+DOCKER=/usr/local/bin:/opt/homebrew/bin']) {
+                sh 'docker logout || true'
+            }
+        }
+        success {
+            echo "Pipeline completed successfully! New image created: ${IMAGE_NAME}:${IMAGE_TAG}"
+        }
+        failure {
+            echo 'Pipeline failed, check logs for details'
         }
     }
 }
