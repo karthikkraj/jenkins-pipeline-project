@@ -16,5 +16,9 @@ COPY . .
 # Expose the Vite default port (5173)
 EXPOSE 5173
 
-# Start Vite with --host to allow network access
-CMD ["npm", "run", "dev", "--", "--host"]
+# Set environment variables to ensure Vite binds to all interfaces
+ENV HOST=0.0.0.0
+ENV PORT=5173
+
+# Start Vite with --host to allow network access inside Docker
+CMD ["npm", "run", "dev"]
